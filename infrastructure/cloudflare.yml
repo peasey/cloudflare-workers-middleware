@@ -1,0 +1,35 @@
+configValidationMode: off # the cloudflare provider currently generates validation warnings, not an issue so turn them off
+
+service:
+  name: api
+  config:
+    host: ${env:HOST}
+    slot: ${opt:slot, 'blue'}
+
+provider:
+  name: cloudflare
+  config:
+    accountId: ${env:CLOUDFLARE_ACCOUNT_ID}
+    zoneId: ${env:CLOUDFLARE_ZONE_ID}
+
+plugins:
+  - serverless-cloudflare-workers
+  - serverless-cloudflare-workers-slots
+
+# save time with minimal packaging as it's done with webpack
+package:
+  excludeDevDependencies: false
+  exclude:
+    - '*'
+    - '*/**'
+  include:
+    - README.md
+
+functions:
+  account:
+    name: account
+    script: src/integration/cloudflare/workers/account
+    webpack: true
+    events:
+      - http:
+          url: ${self:service.config.host}/account*

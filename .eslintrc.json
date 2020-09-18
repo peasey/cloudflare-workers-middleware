@@ -1,0 +1,21 @@
+{
+  "env": {
+    "worker": true,
+    "es6": true
+  },
+  "extends": ["airbnb/base", "prettier"],
+  "plugins": ["prettier"],
+  "rules": {
+    "prettier/prettier": [
+      "error",
+      {
+        "endOfLine": "auto"
+      }
+    ],
+    "no-console": "off",
+    "global-require": "off",
+    "no-undef": "off",
+    "no-use-before-define": "off",
+    "no-new": "off"
+  }
+}

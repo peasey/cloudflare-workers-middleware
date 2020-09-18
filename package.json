@@ -1,0 +1,38 @@
+{
+  "name": "cloudflare-workers-blue-green",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "dotenv -- serverless deploy --config infrastructure/cloudflare.yml",
+    "deploy:account": "dotenv -- serverless deploy --function account --config infrastructure/cloudflare.yml",
+    "remove": "dotenv -- serverless remove --config infrastructure/cloudflare.yml",
+    "remove:account": "dotenv -- serverless remove --function account --config infrastructure/cloudflare.yml",
+    "activate-slot:blue": "dotenv -- serverless activate-slot --slot blue --config infrastructure/cloudflare.yml",
+    "activate-slot:account:blue": "dotenv -- serverless activate-slot --function account --slot blue --config infrastructure/cloudflare.yml",
+    "activate-slot:green": "dotenv -- serverless activate-slot --slot green --config infrastructure/cloudflare.yml",
+    "activate-slot:account:green": "dotenv -- serverless activate-slot --function account --slot green --config infrastructure/cloudflare.yml",
+    "rotate": "dotenv -- serverless rotate --config infrastructure/cloudflare.yml",
+    "rotate:account": "dotenv -- serverless rotate --function account --config infrastructure/cloudflare.yml",
+    "current-slot": "dotenv -- serverless current-slot --config infrastructure/cloudflare.yml",
+    "current-slot:account": "dotenv -- serverless current-slot --function account --config infrastructure/cloudflare.yml"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv-cli": "^4.0.0",
+    "serverless": "^2.0.0",
+    "serverless-cloudflare-workers": "^1.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.9.0",
+    "eslint-config-airbnb": "^18.2.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-jsx-a11y": "^6.3.1",
+    "eslint-plugin-prettier": "^3.1.4",
+    "husky": "^4.3.0",
+    "prettier": "^2.1.2"
+  }
+}
