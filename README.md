@@ -64,6 +64,4 @@ I've created some npm scripts to simplify the commands when wrapped with configu
 
 ```bash
 > npm run remove
-> curl https://api.somewhere.com/account
-> "Processing account resource from green slot..."
 ```
