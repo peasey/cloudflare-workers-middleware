@@ -1,5 +1,5 @@
 module.exports = async () => {
-  const text = `Processing account resource from ${SLOT} slot...`
+  const text = `Processing account resource from ${context.environment.variable('SLOT')} slot...`
   const body = JSON.stringify(text)
   const response = new Response(body, {
     status: 200,
