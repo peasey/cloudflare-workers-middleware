@@ -5,6 +5,7 @@ service:
   config:
     host: ${env:HOST}
     slot: ${opt:slot, 'blue'}
+    environment: ${env:ENVIRONMENT, 'prod'}
 
 provider:
   name: cloudflare
@@ -32,4 +33,4 @@ functions:
     webpack: true
     events:
       - http:
-          url: ${self:service.config.host}/account*
+          url: account*

@@ -11,7 +11,7 @@ async function configureForDeploy(serverless, fn) {
     const desiredState = await getDesiredStateForFunction(serverless, name)
     mutateFromState(desiredState)
     log(
-      `Configuring slot for deployment: [function: ${desiredState.fn.name}, desiredSlot: ${desiredState.slot}, desiredScriptName: ${desiredState.scriptName}, desiredRoute: ${desiredState.route}]`,
+      `Configuring slot for deployment: [function: ${desiredState.fn.name}, environment: ${desiredState.environment}, desiredSlot: ${desiredState.slot}, desiredScriptName: ${desiredState.scriptName}, desiredRoute: ${desiredState.route}]`,
     )
     return Promise.resolve()
   })
@@ -28,6 +28,9 @@ async function configureForRemove(serverless, fn) {
     // duplicate function so we can dynamically create one to delete the other slot
     const duplicatedFn = { ...serverless.service.getFunction(name) }
     const originalRoute = routes.getRoute(duplicatedFn)
+    const host = getHost(serverless)
+    const environment = getEnvironment(serverless)
+    const environmentRoute = getEnvironmentRoute(originalRoute, host, environment)
 
     const currentSlot = await getSlotForFunction(serverless, name)
 
@@ -44,7 +47,7 @@ async function configureForRemove(serverless, fn) {
       if (currentSlotDeployedRoute) {
         mutateFromState(currentSlotState)
         log(
-          `Configuring current slot for removal: [function: ${currentSlotState.fn.name}, slot: ${currentSlotState.slot}, scriptName: ${currentSlotState.scriptName}, routes: [${currentSlotState.route}, ${originalRoute}]]`,
+          `Configuring current slot for removal: [function: ${currentSlotState.fn.name}, slot: ${currentSlotState.slot}, scriptName: ${currentSlotState.scriptName}, routes: [${currentSlotState.route}, ${environmentRoute}]]`,
         )
       }
 
@@ -53,7 +56,7 @@ async function configureForRemove(serverless, fn) {
         if (otherSlotDeployedRoute) {
           mutateFromState(otherSlotState)
           log(
-            `Configuring other slot for removal: [function: ${otherSlotState.fn.name}, slot: ${otherSlotState.slot}, scriptName: ${otherSlotState.scriptName}, route: ${otherSlotState.route}}]`,
+            `Configuring other slot for removal: [function: ${otherSlotState.fn.name}, slot: ${otherSlotState.slot}, scriptName: ${otherSlotState.scriptName}, route: ${otherSlotState.route}]`,
           )
           // dynamically add the duplicated function to the service definition so it gets deleted
           serverless.service.functions[otherSlotState.fn.name] = otherSlotState.fn
@@ -89,7 +92,7 @@ async function activateSlotForFunctions(serverless, slot, functionNames) {
   const promises = functionNames.map(async (name) => {
     const slotState = await getSlotStateForFunction(serverless, name, slot)
     log(
-      `Activating slot: [function: ${slotState.fn.name}, slot: ${slotState.slot}, scriptName: ${slotState.scriptName}, route: ${slotState.route}]`,
+      `Activating slot: [function: ${slotState.fn.name}, environment: ${slotState.environment}, slot: ${slotState.slot}, scriptName: ${slotState.scriptName}, route: ${slotState.route}]`,
     )
 
     const slotRoute = await routes.getDeployedRoute(slotState.route)
@@ -163,6 +166,8 @@ function mutateFromState(state) {
   // Add environment state
   if (!state.fn.environment) {
     state.fn.environment = {
+      HOST: state.host,
+      ENVIRONMENT: state.environment,
       SLOT: state.slot,
     }
   }
@@ -173,7 +178,10 @@ async function getSlotForFunction(serverless, name) {
 
   const fn = serverless.service.getFunction(name)
   const originalRoute = routes.getRoute(fn)
-  const deployedRoute = await routes.getDeployedRoute(originalRoute)
+  const host = getHost(serverless)
+  const environment = getEnvironment(serverless)
+  const environmentRoute = getEnvironmentRoute(originalRoute, host, environment)
+  const deployedRoute = await routes.getDeployedRoute(environmentRoute)
   if (deployedRoute) {
     slot = getSlotFromRoute(deployedRoute)
   }
@@ -183,24 +191,30 @@ async function getSlotForFunction(serverless, name) {
 
 async function ensureRoute(state) {
   const originalRoute = routes.getRoute(state.fn)
-  const deployedRoute = await routes.getDeployedRoute(originalRoute)
+  const environmentRoute = getEnvironmentRoute(originalRoute, state.host, state.environment)
+  const deployedRoute = await routes.getDeployedRoute(environmentRoute)
   if (deployedRoute) {
-    return routes.updateRoute(deployedRoute.id, originalRoute, state.scriptName)
+    return routes.updateRoute(deployedRoute.id, environmentRoute, state.scriptName)
   } else {
-    return routes.deployRoute(originalRoute, state.scriptName)
+    return routes.deployRoute(environmentRoute, state.scriptName)
   }
 }
 
 async function getDesiredStateForFunction(serverless, functionName) {
   const fn = serverless.service.getFunction(functionName)
+  const host = getHost(serverless)
+  const environment = getEnvironment(serverless)
   const originalRoute = routes.getRoute(fn)
-  const deployedRoute = await routes.getDeployedRoute(originalRoute)
+  const environmentRoute = getEnvironmentRoute(originalRoute, host, environment)
+  const deployedRoute = await routes.getDeployedRoute(environmentRoute)
   const desiredSlot = getDesiredSlot(serverless, deployedRoute)
-  const desiredScriptName = generateScriptName(fn.name, desiredSlot)
-  const desiredRoute = getSlotRoute(originalRoute, desiredSlot)
+  const desiredScriptName = generateScriptName(fn.name, desiredSlot, environment)
+  const desiredRoute = getSlotRoute(originalRoute, desiredSlot, host, environment)
 
   return Promise.resolve({
     fn,
+    host,
+    environment,
     slot: desiredSlot,
     scriptName: desiredScriptName,
     route: desiredRoute,
@@ -209,12 +223,16 @@ async function getDesiredStateForFunction(serverless, functionName) {
 
 async function getSlotStateForFunction(serverless, functionName, slot) {
   const fn = serverless.service.getFunction(functionName)
+  const host = getHost(serverless)
+  const environment = getEnvironment(serverless)
   const originalRoute = routes.getRoute(fn)
-  const scriptName = generateScriptName(fn.name, slot)
-  const route = getSlotRoute(originalRoute, slot)
+  const scriptName = generateScriptName(fn.name, slot, environment)
+  const route = getSlotRoute(originalRoute, slot, host, environment)
 
   return Promise.resolve({
     fn,
+    host,
+    environment,
     slot,
     scriptName,
     route,
@@ -238,8 +256,17 @@ function getDesiredSlot(serverless, deployedRoute) {
   return desiredSlot
 }
 
-function getSlotRoute(route, slot) {
-  return [slot, route].join('-')
+function getSlotRoute(route, slot, host, environment) {
+  const environmentRoute = getEnvironmentRoute(route, host, environment)
+  return [slot, environmentRoute].join('-')
+}
+
+function getEnvironmentRoute(route, host, environment) {
+  if (environment === 'prod') {
+    return [host, route].join('/')
+  } else {
+    return [host, environment, route].join('/')
+  }
 }
 
 function getDefaultSlot(serverless) {
@@ -270,11 +297,19 @@ function getDesiredFromCurrentSlot(slot) {
   return 'blue'
 }
 
-function generateScriptName(script, slot) {
-  return [slot, script].join('-')
+function generateScriptName(script, slot, environment) {
+  return [slot, environment, script].join('-')
 }
 
 const nextSlot = (slot) => getDesiredFromCurrentSlot(slot)
+
+function getHost(serverless) {
+  return serverless.service.serviceObject.config.host
+}
+
+function getEnvironment(serverless) {
+  return serverless.service.serviceObject.config.environment
+}
 
 module.exports = {
   configureForDeploy,
