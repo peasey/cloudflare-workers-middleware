@@ -1,6 +1,10 @@
-# Cloudflare Workers - Blue / Green Deployments
+# Cloudflare Workers - Enhanced Development Experience
 
-This repo contains a minimal example from a proof of concept using the Serverless framework to enable blue / green deployments for Cloudflare Workers.
+This is a fork of the [blue / green deployments for Cloudflare Workers](https://github.com/peasey/cloudflare-workers-blue-green-poc) repo.
+
+This repo contains a minimal example from a proof of concept to enhance the local development experience for Cloudflare Workers. The principles of substitutable dependencies and execution context are implemented to enable Node.js and VS Code to be used for local development, testing and debugging. The Serverless Framework plugin in this repo is extended to create "logical environments" that enable side by side deployment use cases such as multiple developers working in the same account, or CI/CD processes deploying ephemeral resources.
+
+There is an [accompanying blog post](https://blog.peasey.co.uk/blog/enhancing-the-development-experience-for-cloudflare-workers) for this repo.
 
 ## Configuration
 
