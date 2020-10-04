@@ -73,7 +73,7 @@ I've created some npm scripts to simplify the commands when wrapped with configu
 
 An approach to local development, debugging and testing is discussed here:
 
-https://blog.peasey.co.uk/blog/speeding-up-the-local-development-workflow-for-cloudflare-workers/
+https://blog.peasey.co.uk/blog/enhancing-the-development-experience-for-cloudflare-workers
 
 ### Entry point
 
