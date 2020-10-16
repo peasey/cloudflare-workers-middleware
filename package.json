@@ -1,7 +1,7 @@
 {
-  "name": "cloudflare-workers-blue-green",
+  "name": "cloudflare-workers-middleware",
   "version": "1.0.0",
-  "description": "",
+  "description": "This repo contains a proof of concept for API middleware running in Cloudflare Workers.",
   "main": "index.js",
   "scripts": {
     "deploy": "dotenv -- serverless deploy --config infrastructure/cloudflare.yml",
@@ -18,14 +18,13 @@
     "current-slot:account": "dotenv -- serverless current-slot --function account --config infrastructure/cloudflare.yml"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Peasey",
+  "license": "MIT",
   "dependencies": {
-    "dotenv-cli": "^4.0.0",
-    "serverless": "^2.0.0",
-    "serverless-cloudflare-workers": "^1.2.0"
+    "path-parser": "^6.1.0"
   },
   "devDependencies": {
+    "dotenv-cli": "^4.0.0",
     "eslint": "^7.9.0",
     "eslint-config-airbnb": "^18.2.0",
     "eslint-config-prettier": "^6.11.0",
@@ -34,6 +33,8 @@
     "eslint-plugin-prettier": "^3.1.4",
     "husky": "^4.3.0",
     "node-fetch": "^2.6.1",
-    "prettier": "^2.1.2"
+    "prettier": "^2.1.2",
+    "serverless": "^2.7.0",
+    "serverless-cloudflare-workers": "^1.2.0"
   }
 }
